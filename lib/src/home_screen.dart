@@ -1,8 +1,6 @@
-import 'dart:convert';
-
 import 'package:api_integration/src/model/album.dart';
+import 'package:api_integration/src/service/album_service.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -18,24 +16,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late Future<List<Album>> albums;
+  final AlbumService albumService = AlbumService();
 
   @override
   void initState() {
     super.initState();
-    albums = fetchAlbum();
-  }
-
-  Future<List<Album>> fetchAlbum() async {
-    final response = await http.get(
-      Uri.parse('https://jsonplaceholder.typicode.com/albums'),
-    );
-
-    if (response.statusCode == 200) {
-      final list = json.decode(response.body) as List;
-      return list.map((data) => Album.fromJson(data)).toList();
-    } else {
-      throw Exception('Failed to load album');
-    }
+    albums = albumService.fetchAlbum();
   }
 
   @override
@@ -51,7 +37,9 @@ class _HomeScreenState extends State<HomeScreen> {
             return ListView.builder(
               itemCount: snapshot.data!.length,
               itemBuilder: (_, i) {
-                return Text(snapshot.data![i].title);
+                return AlbumItem(
+                  album: snapshot.data![i],
+                );
               },
             );
           } else if (snapshot.hasError) {
@@ -65,6 +53,26 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
+    );
+  }
+}
+
+class AlbumItem extends StatelessWidget {
+  const AlbumItem({
+    Key? key,
+    required this.album,
+  }) : super(key: key);
+
+  final Album album;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: CircleAvatar(
+        child: Text('${album.id}'),
+      ),
+      title: Text(album.title),
+      subtitle: Text('User ID: ${album.userId}'),
     );
   }
 }
