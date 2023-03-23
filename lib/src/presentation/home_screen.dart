@@ -1,5 +1,6 @@
-import 'package:api_integration/src/model/album.dart';
-import 'package:api_integration/src/service/album_service.dart';
+
+import 'package:api_integration/src/data/album/model/album.dart';
+import 'package:api_integration/src/data/album/service/album_service.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
