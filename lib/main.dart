@@ -1,4 +1,8 @@
+import 'dart:convert';
+
+import 'package:api_integration/album.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const MyApp());
@@ -29,12 +33,24 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  late Future<Album> futureAlbum;
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+
+  @override
+  void initState() {
+    super.initState();
+    futureAlbum = fetchAlbum();
+  }
+
+  Future<Album> fetchAlbum() async {
+    final response = await http
+        .get(Uri.parse('https://jsonplaceholder.typicode.com/albums/1'));
+
+    if (response.statusCode == 200) {
+      return Album.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to load album');
+    }
   }
 
   @override
@@ -43,25 +59,18 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+      body: FutureBuilder<Album>(
+        future: futureAlbum,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return Text(snapshot.data!.title);
+          } else if (snapshot.hasError) {
+            return Text('${snapshot.error}');
+          }
+
+          return const CircularProgressIndicator();
+        },
+      )
     );
   }
 }
