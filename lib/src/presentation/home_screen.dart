@@ -1,11 +1,9 @@
-
 import 'package:api_integration/src/data/album/model/album.dart';
-import 'package:api_integration/src/data/album/repository/album_repository.dart';
-import 'package:api_integration/src/data/album/service/album_service.dart';
-import 'package:api_integration/src/domain/album/use_case/fetch_albums_use_case.dart';
+import 'package:api_integration/src/presentation/providers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({
     Key? key,
     required this.title,
@@ -14,52 +12,25 @@ class HomeScreen extends StatefulWidget {
   final String title;
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final albums = ref.watch(fetchAlbumProvider).value;
 
-class _HomeScreenState extends State<HomeScreen> {
-  late Future<List<Album>> albums;
-  late final FetchAlbumsUseCase fetchAlbumsUseCase;
-  final AlbumService albumService = AlbumService();
-
-  @override
-  void initState() {
-    super.initState();
-    final AlbumRepository albumRepository;
-    final AlbumService albumService = AlbumService();
-    albumRepository = AlbumRepositoryImpl(albumService);
-    albums = albumService.fetchAlbum();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(title),
       ),
-      body: FutureBuilder<List<Album>>(
-        future: albums,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return ListView.builder(
-              itemCount: snapshot.data!.length,
+      body: albums == null
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : ListView.builder(
+              itemCount: albums.length,
               itemBuilder: (_, i) {
                 return AlbumItem(
-                  album: snapshot.data![i],
+                  album: albums[i],
                 );
               },
-            );
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text('${snapshot.error}'),
-            );
-          }
-
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        },
-      ),
+            ),
     );
   }
 }
